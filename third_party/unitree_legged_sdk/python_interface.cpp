@@ -3,19 +3,19 @@ Copyright (c) 2020, Unitree Robotics.Co.Ltd. All rights reserved.
 Use of this source code is governed by the MPL-2.0 license, see LICENSE.
 ************************************************************************/
 
-#include "unitree_legged_sdk/unitree_legged_sdk.h"
+#include "unitree_legged_sdk/laikago_sdk.hpp"
 #include <array>
 #include <math.h>
 #include <pybind11/operators.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-using namespace UNITREE_LEGGED_SDK;
+using namespace laikago;
 
 class RobotInterface
 {
 public:
-    RobotInterface() : safe(LeggedType::A1), udp(LOWLEVEL){
+    RobotInterface() : control(LOWLEVEL), udp(LOW_CMD_LENGTH, LOW_STATE_LENGTH){
         // InitEnvironment();
     }
     LowState ReceiveObservation();
@@ -23,14 +23,14 @@ public:
     void Initialize();
 
     UDP udp;
-    Safety safe;
+    Control control;
     LowState state = {0};
     LowCmd cmd = {0};
 };
 
 LowState RobotInterface::ReceiveObservation() {
     udp.Recv();
-    udp.GetRecv(state);
+    udp.GetState(state);
     return state;
 }
 
@@ -38,15 +38,14 @@ void RobotInterface::SendCommand(std::array<float, 60> motorcmd) {
     cmd.levelFlag = 0xff;
     for (int motor_id = 0; motor_id < 12; motor_id++) {
         cmd.motorCmd[motor_id].mode = 0x0A;
-        cmd.motorCmd[motor_id].q = motorcmd[motor_id * 5];
-        cmd.motorCmd[motor_id].Kp = motorcmd[motor_id * 5 + 1];
-        cmd.motorCmd[motor_id].dq = motorcmd[motor_id * 5 + 2];
-        cmd.motorCmd[motor_id].Kd = motorcmd[motor_id * 5 + 3];
-        cmd.motorCmd[motor_id].tau = motorcmd[motor_id * 5 + 4];
+        cmd.motorCmd[motor_id].position = motorcmd[motor_id * 5];
+        cmd.motorCmd[motor_id].positionStiffness = motorcmd[motor_id * 5 + 1];
+        cmd.motorCmd[motor_id].velocity = motorcmd[motor_id * 5 + 2];
+        cmd.motorCmd[motor_id].velocityStiffness = motorcmd[motor_id * 5 + 3];
+        cmd.motorCmd[motor_id].torque = motorcmd[motor_id * 5 + 4];
     }
-    safe.PositionLimit(cmd);
-    udp.SetSend(cmd);
-    udp.Send();
+    safe.JointLimit(cmd);
+    udp.Send(cmd);
 }
 
 namespace py = pybind11;
@@ -55,9 +54,9 @@ namespace py = pybind11;
 
 PYBIND11_MODULE(robot_interface, m) {
     m.doc() = R"pbdoc(
-          A1 Robot Interface Python Bindings
+          Laikago Robot Interface Python Bindings
           -----------------------
-          .. currentmodule:: a1_robot_interface
+          .. currentmodule:: laikago_robot_interface
           .. autosummary::
              :toctree: _generate
       )pbdoc";
@@ -72,9 +71,9 @@ PYBIND11_MODULE(robot_interface, m) {
         .def(py::init<>())
         .def_readwrite("quaternion", &IMU::quaternion)
         .def_readwrite("gyroscope", &IMU::gyroscope)
-        .def_readwrite("accelerometer", &IMU::accelerometer)
+        .def_readwrite("accelerometer", &IMU::acceleration)
         .def_readwrite("rpy", &IMU::rpy)
-        .def_readwrite("temperature", &IMU::temperature);
+        .def_readwrite("temperature", &IMU::temp);
 
     py::class_<LED>(m, "LED")
         .def(py::init<>())
@@ -85,62 +84,43 @@ PYBIND11_MODULE(robot_interface, m) {
     py::class_<MotorState>(m, "MotorState")
         .def(py::init<>())
         .def_readwrite("mode", &MotorState::mode)
-        .def_readwrite("q", &MotorState::q)
-        .def_readwrite("dq", &MotorState::dq)
-        .def_readwrite("ddq", &MotorState::ddq)
-        .def_readwrite("tauEst", &MotorState::tauEst)
-        .def_readwrite("q_raw", &MotorState::q_raw)
-        .def_readwrite("dq_raw", &MotorState::dq_raw)
-        .def_readwrite("ddq_raw", &MotorState::ddq_raw)
+        .def_readwrite("q", &MotorState::position)
+        .def_readwrite("dq", &MotorState::velocity)
+        .def_readwrite("tauEst", &MotorState::torque)
         .def_readwrite("temperature", &MotorState::temperature)
-        .def_readwrite("reserve", &MotorState::reserve);
+        .def_readwrite("freserve", &MotorState::fReserve)
+        .def_readwrite("ireserve", &MotorState::iReserve);
 
     py::class_<MotorCmd>(m, "MotorCmd")
         .def(py::init<>())
         .def_readwrite("mode", &MotorCmd::mode)
-        .def_readwrite("q", &MotorCmd::q)
-        .def_readwrite("dq", &MotorCmd::dq)
-        .def_readwrite("tau", &MotorCmd::tau)
-        .def_readwrite("Kp", &MotorCmd::Kp)
-        .def_readwrite("Kd", &MotorCmd::Kd)
-        .def_readwrite("reserve", &MotorCmd::reserve);
+        .def_readwrite("q", &MotorCmd::position)
+        .def_readwrite("dq", &MotorCmd::velocity)
+        .def_readwrite("tau", &MotorCmd::torque)
+        .def_readwrite("Kp", &MotorCmd::positionStiffness)
+        .def_readwrite("Kd", &MotorCmd::velocityStiffness);
 
     py::class_<LowState>(m, "LowState")
         .def(py::init<>())
         .def_readwrite("levelFlag", &LowState::levelFlag)
-        .def_readwrite("commVersion", &LowState::commVersion)
-        .def_readwrite("robotID", &LowState::robotID)
-        .def_readwrite("SN", &LowState::SN)
-        .def_readwrite("bandWidth", &LowState::bandWidth)
         .def_readwrite("imu", &LowState::imu)
         .def_readwrite("motorState", &LowState::motorState)
         .def_readwrite("footForce", &LowState::footForce)
-        .def_readwrite("footForceEst", &LowState::footForceEst)
         .def_readwrite("tick", &LowState::tick)
         .def_readwrite("wirelessRemote", &LowState::wirelessRemote)
-        .def_readwrite("reserve", &LowState::reserve)
         .def_readwrite("crc", &LowState::crc);
 
     py::class_<LowCmd>(m, "LowCmd")
         .def(py::init<>())
         .def_readwrite("levelFlag", &LowCmd::levelFlag)
-        .def_readwrite("commVersion", &LowCmd::commVersion)
-        .def_readwrite("robotID", &LowCmd::robotID)
-        .def_readwrite("SN", &LowCmd::SN)
-        .def_readwrite("bandWidth", &LowCmd::bandWidth)
         .def_readwrite("motorCmd", &LowCmd::motorCmd)
         .def_readwrite("led", &LowCmd::led)
         .def_readwrite("wirelessRemote", &LowCmd::wirelessRemote)
-        .def_readwrite("reserve", &LowCmd::reserve)
         .def_readwrite("crc", &LowCmd::crc);
 
     py::class_<HighState>(m, "HighState")
         .def(py::init<>())
         .def_readwrite("levelFlag", &HighState::levelFlag)
-        .def_readwrite("commVersion", &HighState::commVersion)
-        .def_readwrite("robotID", &HighState::robotID)
-        .def_readwrite("SN", &HighState::SN)
-        .def_readwrite("bandWidth", &HighState::bandWidth)
         .def_readwrite("mode", &HighState::mode)
         .def_readwrite("imu", &HighState::imu)
         .def_readwrite("forwardSpeed", &HighState::forwardSpeed)
@@ -153,19 +133,13 @@ PYBIND11_MODULE(robot_interface, m) {
         .def_readwrite("footPosition2Body", &HighState::footPosition2Body)
         .def_readwrite("footSpeed2Body", &HighState::footSpeed2Body)
         .def_readwrite("footForce", &HighState::footForce)
-        .def_readwrite("footForceEst", &HighState::footForceEst)
         .def_readwrite("tick", &HighState::tick)
         .def_readwrite("wirelessRemote", &HighState::wirelessRemote)
-        .def_readwrite("reserve", &HighState::reserve)
         .def_readwrite("crc", &HighState::crc);
 
     py::class_<HighCmd>(m, "HighCmd")
         .def(py::init<>())
         .def_readwrite("levelFlag", &HighCmd::levelFlag)
-        .def_readwrite("commVersion", &HighCmd::commVersion)
-        .def_readwrite("robotID", &HighCmd::robotID)
-        .def_readwrite("SN", &HighCmd::SN)
-        .def_readwrite("bandWidth", &HighCmd::bandWidth)
         .def_readwrite("mode", &HighCmd::mode)
         .def_readwrite("forwardSpeed", &HighCmd::forwardSpeed)
         .def_readwrite("sideSpeed", &HighCmd::sideSpeed)
@@ -177,8 +151,6 @@ PYBIND11_MODULE(robot_interface, m) {
         .def_readwrite("roll", &HighCmd::roll)
         .def_readwrite("led", &HighCmd::led)
         .def_readwrite("wirelessRemote", &HighCmd::wirelessRemote)
-        .def_readwrite("AppRemote", &HighCmd::AppRemote)
-        .def_readwrite("reserve", &HighCmd::reserve)
         .def_readwrite("crc", &HighCmd::crc);
 
     py::class_<UDPState>(m, "UDPState")
