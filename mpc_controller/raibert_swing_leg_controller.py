@@ -29,6 +29,7 @@ _FOOT_CLEARANCE_M = 0.01
 
 def _gen_parabola(phase: float, start: float, mid: float, end: float) -> float:
   """Gets a point on a parabola y = a x^2 + b x + c.
+     在抛物线y = a x ^ 2 + b x + c上得到一个点。
 
   The Parabola is determined by three points (0, start), (0.5, mid), (1, end) in
   the plane.
@@ -56,6 +57,7 @@ def _gen_parabola(phase: float, start: float, mid: float, end: float) -> float:
 def _gen_swing_foot_trajectory(input_phase: float, start_pos: Sequence[float],
                                end_pos: Sequence[float]) -> Tuple[float]:
   """Generates the swing trajectory using a parabola.
+     使用抛物线生成摆动轨迹。
 
   Args:
     input_phase: the swing/stance phase value between [0, 1].
@@ -65,14 +67,17 @@ def _gen_swing_foot_trajectory(input_phase: float, start_pos: Sequence[float],
   Returns:
     The desired foot position at the current phase.
   """
-  # We augment the swing speed using the below formula. For the first half of
-  # the swing cycle, the swing leg moves faster and finishes 80% of the full
-  # swing trajectory. The rest 20% of trajectory takes another half swing
-  # cycle. Intuitely, we want to move the swing foot quickly to the target
-  # landing location and stay above the ground, in this way the control is more
-  # robust to perturbations to the body that may cause the swing foot to drop
-  # onto the ground earlier than expected. This is a common practice similar
-  # to the MIT cheetah and Marc Raibert's original controllers.
+  # We augment the swing speed using the below formula. For the first half of the swing cycle, 
+  # the swing leg moves faster and finishes 80% of the full swing trajectory. 
+  # The rest 20% of trajectory takes another half swing cycle. 
+  # Intuitely, we want to move the swing foot quickly to the target landing 
+  # location and stay above the ground, in this way the control is more robust to 
+  # perturbations to the body that may cause the swing foot to drop onto the ground earlier than expected. 
+  # This is a common practice similar to the MIT cheetah and Marc Raibert's original controllers.
+  #我们使用以下公式提高摆动速度。
+  #在摆动周期的前半段，摆动腿移动得更快，并完成了整个摆动轨迹的80％。其余20％的轨迹需要再进行半个摆动周期。
+  #直观地讲，我们希望将摇摆脚快速移动到目标着陆位置并保持在地面上方，
+  #这样，控制对扰动身体的鲁棒性可能会导致摇摆脚比预期的更早落到地面上。这是常见的做法，类似于MIT猎豹和Marc Raibert的原始控制器。
   phase = input_phase
   if input_phase <= 0.5:
     phase = 0.8 * math.sin(input_phase * math.pi)
@@ -91,6 +96,7 @@ def _gen_swing_foot_trajectory(input_phase: float, start_pos: Sequence[float],
 
 class RaibertSwingLegController(leg_controller.LegController):
   """Controls the swing leg position using Raibert's formula.
+     使用Raibert公式控制摆腿位置。
 
   For details, please refer to chapter 2 in "Legged robbots that balance" by
   Marc Raibert. The key idea is to stablize the swing foot's location based on
@@ -116,8 +122,16 @@ class RaibertSwingLegController(leg_controller.LegController):
       desired_speed: Behavior parameters. X-Y speed.
       desired_twisting_speed: Behavior control parameters.
       desired_height: Desired standing height.
-      foot_clearance: The foot clearance on the ground at the end of the swing
-        cycle.
+      foot_clearance: The foot clearance on the ground at the end of the swing cycle.
+
+      参数：
+      robot：机器人实例。
+      gait_generator：生成站立/摆动模式。
+      state_estimator：估计CoM速度。
+      desired_speed：行为参数。 X-Y速度。
+      desired_twisting_speed：行为控制参数。
+      desired_height：所需的站立高度。
+      foot_clearance：挥杆循环结束时地面上的脚部间隙。
     """
     self._robot = robot
     self._state_estimator = state_estimator
@@ -133,6 +147,7 @@ class RaibertSwingLegController(leg_controller.LegController):
 
   def reset(self, current_time: float) -> None:
     """Called during the start of a swing cycle.
+       在摆动周期开始时调用。
 
     Args:
       current_time: The wall time in seconds.
@@ -145,6 +160,7 @@ class RaibertSwingLegController(leg_controller.LegController):
 
   def update(self, current_time: float) -> None:
     """Called at each control step.
+       在每个control step中调用。
 
     Args:
       current_time: The wall time in seconds.
@@ -152,8 +168,8 @@ class RaibertSwingLegController(leg_controller.LegController):
     del current_time
     new_leg_state = self._gait_generator.desired_leg_state
 
-    # Detects phase switch for each leg so we can remember the feet position at
-    # the beginning of the swing phase.
+    # Detects phase switch for each leg so we can remember the feet position at the beginning of the swing phase.
+    # 检测每条腿的相位转换，以便我们可以记住摆动阶段开始时的脚位置。
     for leg_id, state in enumerate(new_leg_state):
       if (state == gait_generator_lib.LegState.SWING
           and state != self._last_leg_state[leg_id]):
@@ -174,9 +190,11 @@ class RaibertSwingLegController(leg_controller.LegController):
                        gait_generator_lib.LegState.EARLY_CONTACT):
         continue
 
-      # For now we did not consider the body pitch/roll and all calculation is
-      # in the body frame. TODO(b/143378213): Calculate the foot_target_position
-      # in world frame and then project back to calculate the joint angles.
+      # For now we did not consider the body pitch/roll and all calculation is in the body frame.
+      # TODO(b/143378213): Calculate the foot_target_position in world frame and then project back to calculate the joint angles.
+     
+      # 目前我们没有考虑身体的roll/pitch，所有的计算都在身体框架内。
+      # TODO（b / 143378213）：计算世界框架中的foot_target_position，然后向后投影以计算关节角度。
       hip_offset = hip_positions[leg_id]
       twisting_vector = np.array((-hip_offset[1], hip_offset[0], 0))
       hip_horizontal_velocity = com_velocity + yaw_dot * twisting_vector
