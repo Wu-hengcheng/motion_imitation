@@ -1,4 +1,6 @@
-"""A model based controller framework."""
+"""A model based controller framework.
+  基于模型的控制器框架。
+"""
 
 from __future__ import absolute_import
 from __future__ import division
@@ -16,9 +18,10 @@ from typing import Any, Callable
 
 class LocomotionController(object):
   """Generates the quadruped locomotion.
+     生成四足运动。
 
-  The actual effect of this controller depends on the composition of each
-  individual subcomponent.
+  The actual effect of this controller depends on the composition of each individual subcomponent.
+    该控制器的实际效果取决于每个子组件的组成。
 
   """
   def __init__(
@@ -82,7 +85,9 @@ class LocomotionController(object):
     self._stance_leg_controller.update(self._time_since_reset)
 
   def get_action(self):
-    """Returns the control ouputs (e.g. positions/torques) for all motors."""
+    """Returns the control ouputs (e.g. positions/torques) for all motors.
+      返回所有电机的控制输出（例如位置/扭矩）。
+    """
     swing_action = self._swing_leg_controller.get_action()
     # start_time = time.time()
     stance_action, qp_sol = self._stance_leg_controller.get_action()

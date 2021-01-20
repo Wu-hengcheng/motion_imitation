@@ -1,4 +1,6 @@
 """State estimator."""
+""" 状态估计器"""
+
 
 from __future__ import absolute_import
 from __future__ import division
@@ -15,9 +17,10 @@ _DEFAULT_WINDOW_SIZE = 20
 
 class MovingWindowFilter(object):
   """A stable O(1) moving filter for incoming data streams.
+     用于输入数据流的稳定的O（1）移动滤波器。
 
-  We implement the Neumaier's algorithm to calculate the moving window average,
-  which is numerically stable.
+  We implement the Neumaier's algorithm to calculate the moving window average,which is numerically stable.
+   我们采用Neumaier算法来计算移动窗口平均值，该平均值在数值上是稳定的。
 
   """
 
@@ -26,6 +29,7 @@ class MovingWindowFilter(object):
 
     Args:
       window_size: The moving window size.
+      window_size：移动窗口的大小。
     """
     assert window_size > 0
     self._window_size = window_size
@@ -38,12 +42,14 @@ class MovingWindowFilter(object):
 
   def _neumaier_sum(self, value: float):
     """Update the moving window sum using Neumaier's algorithm.
+       使用Neumaier算法更新移动窗口总和。
 
     For more details please refer to:
     https://en.wikipedia.org/wiki/Kahan_summation_algorithm#Further_enhancements
 
     Args:
       value: The new value to be added to the window.
+      value：要添加到窗口的新值。
     """
 
     new_sum = self._sum + value
@@ -58,12 +64,15 @@ class MovingWindowFilter(object):
 
   def calculate_average(self, new_value: float) -> float:
     """Computes the moving window average in O(1) time.
+       计算O（1）时间的移动窗口平均值。
 
     Args:
       new_value: The new value to enter the moving window.
+      new_value：进入移动窗口的新值。
 
     Returns:
       The average of the values in the window.
+      窗口中值的平均值。
 
     """
     deque_len = len(self._value_deque)
@@ -81,6 +90,7 @@ class MovingWindowFilter(object):
 
 class COMVelocityEstimator(object):
   """Estimate the CoM velocity using on board sensors.
+     使用板载传感器估计CoM速度。
 
 
   Requires knowledge about the base velocity in world frame, which for example

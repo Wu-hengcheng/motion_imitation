@@ -54,7 +54,9 @@ class Gamepad:
         self.update_command(event)
 
   def update_command(self, event):
-    """Update command based on event readings."""
+    """Update command based on event readings.
+       基于事件读数更新命令。
+    """
     if event.ev_type == 'Key' and event.code == 'BTN_TL':
       self._lb_pressed = bool(event.state)
     elif event.ev_type == 'Key' and event.code == 'BTN_TR':

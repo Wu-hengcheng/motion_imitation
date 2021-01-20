@@ -1,4 +1,6 @@
-"""Gait pattern planning module."""
+"""Gait pattern planning module.
+   步态模式计划模块。
+"""
 
 from __future__ import absolute_import
 from __future__ import division
@@ -32,6 +34,7 @@ _NOMINAL_CONTACT_DETECTION_PHASE = 0.1
 
 class OpenloopGaitGenerator(gait_generator.GaitGenerator):
   """Generates openloop gaits for quadruped robots.
+     为四足机器人产生开环步态。
 
   A flexible open-loop gait generator. Each leg has its own cycle and duty
   factor. And the state of each leg alternates between stance and swing. One can
@@ -55,6 +58,7 @@ class OpenloopGaitGenerator(gait_generator.GaitGenerator):
         and num_legs property.
       stance_duration: The desired stance duration.
       duty_factor: The ratio  stance_duration / total_gait_cycle.
+      duty_factor：stance_duration / total_gait_cycle的比率。
       initial_leg_state: The desired initial swing/stance state of legs indexed
         by their id.
       initial_leg_phase: The desired initial phase [0, 1] of the legs within the

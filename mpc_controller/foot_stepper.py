@@ -1,5 +1,8 @@
 # Lint as: python3
-"""A state machine that steps each foot for a static gait. Experimental code."""
+"""A state machine that steps each foot for a static gait. Experimental code.
+   一个状态机，它的每只脚都踩踏以保持静态步态。实验代码。
+"""
+
 
 import copy
 import math
@@ -23,7 +26,9 @@ class StepOutput(object):
 
 
 class FootStepper(object):
-  """This class computes desired foot placement for a quadruped robot."""
+  """This class computes desired foot placement for a quadruped robot.
+     此类计算四足机器人的所需脚部位置。
+  """
 
   def __init__(self, bullet_client, toe_ids, toe_pos_local_ref):
     self.bullet_client = bullet_client
@@ -48,8 +53,7 @@ class FootStepper(object):
     self.bullet_client.changeVisualShape(
         self.sphere_uid_centroid, -1, rgbaColor=[1, 1, 0, alpha])
 
-    # Disable collision since visualization spheres should not collide with the
-    # robot.
+    # Disable collision since visualization spheres should not collide with the robot.
     self.bullet_client.setCollisionFilterGroupMask(self.sphere_uid_centroid, -1,
                                                    0, 0)
 

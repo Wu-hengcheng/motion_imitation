@@ -1,4 +1,6 @@
-"""The leg controller class interface."""
+"""The leg controller class interface.
+  腿控制器类接口。
+"""
 
 from __future__ import absolute_import
 from __future__ import division

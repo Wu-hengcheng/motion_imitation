@@ -1,4 +1,6 @@
-"""Gait pattern planning module."""
+"""Gait pattern planning module.
+   步态模式计划模块。
+"""
 
 from __future__ import absolute_import
 from __future__ import division
@@ -20,7 +22,9 @@ class LegState(enum.Enum):
 
 
 class GaitGenerator(object):  # pytype: disable=ignored-metaclass
-  """Generates the leg swing/stance pattern for the robot."""
+  """Generates the leg swing/stance pattern for the robot.
+    为机器人生成腿部摆动/站立模式。
+  """
 
   __metaclass__ = abc.ABCMeta
 

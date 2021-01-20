@@ -1,5 +1,7 @@
 # Lint as: python3
-"""A torque based stance controller framework."""
+"""A torque based stance controller framework.
+   基于扭矩的姿态控制器框架。
+"""
 
 from __future__ import absolute_import
 from __future__ import division
@@ -125,8 +127,8 @@ class TorqueStanceLegController(leg_controller.LegController):
 
     action = {}
     for leg_id, force in enumerate(contact_forces):
-      # While "Lose Contact" is useful in simulation, in real environment it's
-      # susceptible to sensor noise. Disabling for now.
+      # While "Lose Contact" is useful in simulation, in real environment it's susceptible to sensor noise. Disabling for now.
+      # 尽管“丢失接触”在仿真中很有用，但在实际环境中，它容易受到传感器噪声的影响。现在禁用。
       # if self._gait_generator.leg_state[
       #     leg_id] == gait_generator_lib.LegState.LOSE_CONTACT:
       #   force = (0, 0, 0)

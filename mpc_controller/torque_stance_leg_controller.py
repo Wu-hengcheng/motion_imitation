@@ -50,9 +50,10 @@ _PLANNING_TIMESTEP = 0.025
 
 class TorqueStanceLegController(leg_controller.LegController):
   """A torque based stance leg controller framework.
+     基于扭矩的姿态腿控制器框架。
 
-  Takes in high level parameters like walking speed and turning speed, and
-  generates necessary the torques for stance legs.
+  Takes in high level parameters like walking speed and turning speed, and generates necessary the torques for stance legs.
+  接受诸如步行速度和转弯速度之类的高级参数，并生成必要的站立腿扭矩。
   """
   def __init__(
       self,
@@ -71,8 +72,8 @@ class TorqueStanceLegController(leg_controller.LegController):
   ):
     """Initializes the class.
 
-    Tracks the desired position/velocity of the robot by computing proper joint
-    torques using MPC module.
+    Tracks the desired position/velocity of the robot by computing proper joint torques using MPC module.
+    通过使用MPC模块计算适当的关节扭矩来跟踪机器人的期望位置/速度。
 
     Args:
       robot: A robot instance.
@@ -80,12 +81,13 @@ class TorqueStanceLegController(leg_controller.LegController):
       state_estimator: Estimate the robot states (e.g. CoM velocity).
       desired_speed: desired CoM speed in x-y plane.
       desired_twisting_speed: desired CoM rotating speed in z direction.
+      desired_twisting_speed：z方向上的所需CoM旋转速度。
       desired_body_height: The standing height of the robot.
       body_mass: The total mass of the robot.
       body_inertia: The inertia matrix in the body principle frame. We assume
         the body principle coordinate frame has x-forward and z-up.
       num_legs: The number of legs used for force planning.
-      friction_coeffs: The friction coeffs on the contact surfaces.
+       friction_coeffs: The friction coeffs on the contact surfaces.
     """
     self._robot = robot
     self._gait_generator = gait_generator
@@ -115,7 +117,9 @@ class TorqueStanceLegController(leg_controller.LegController):
     del current_time
 
   def get_action(self):
-    """Computes the torque for stance legs."""
+    """Computes the torque for stance legs.
+      计算站立腿的扭矩。
+    """
     desired_com_position = np.array((0., 0., self._desired_body_height),
                                     dtype=np.float64)
     desired_com_velocity = np.array(

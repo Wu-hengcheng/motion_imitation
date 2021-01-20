@@ -1,5 +1,7 @@
 # Lint as: python3
-"""Classic model predictive control methods."""
+"""Classic model predictive control methods.
+   经典模型预测控制方法。
+"""
 
 from __future__ import absolute_import
 from __future__ import division
